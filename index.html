@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>থানা কমিটিসমূহ - প্রিন্ট লেআউট</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --table-font-size: 14px;
+      --cell-padding-v: 6px;
+      --cell-padding-h: 5px;
+      --page-margin-lr: 18mm;
+      --col-org-w: 16%;
+      --col-desig-w: 22%;
+      --col-name-w: 27%;
+      --col-mobile-w: 17%;
+      --col-remarks-w: 18%;
+    }
+
+    body {
+      font-family: 'Noto Sans Bengali', sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Standard A4 Screen Preview Rules */
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 15mm var(--page-margin-lr) 15mm var(--page-margin-lr);
+      margin: 24px auto;
+      background: #ffffff;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    /* Dynamic CSS Rules Linked with Config */
+    .a4-page table {
+      font-size: var(--table-font-size);
+      width: 100%;
+    }
+
+    .a4-page table th, 
+    .a4-page table td {
+      padding-top: var(--cell-padding-v) !important;
+      padding-bottom: var(--cell-padding-v) !important;
+      padding-left: var(--cell-padding-h) !important;
+      padding-right: var(--cell-padding-h) !important;
+      line-height: 1.25;
+    }
+
+    /* Column Width Selector Rules */
+    .col-org { width: var(--col-org-w); }
+    .col-desig { width: var(--col-desig-w); }
+    .col-name { width: var(--col-name-w); }
+    .col-mobile { width: var(--col-mobile-w); }
+    .col-remarks { width: var(--col-remarks-w); }
+
+    /* Print Styles */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .print-area {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+
+      .a4-page {
+        width: 210mm !important;
+        height: 297mm !important;
+        padding: 15mm var(--page-margin-lr) 15mm var(--page-margin-lr) !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      .a4-page:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+    }
+
+    /* Table borders */
+    table, th, td {
+      border: 1px solid #334155;
+      border-collapse: collapse;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Main Print Preview Area -->
+  <main class="w-full p-4 lg:p-8 print-area flex justify-center">
+    <div id="pages-container" class="w-full max-w-[210mm]"></div>
+  </main>
+
+  <script>
+    window.onload = async function() {
+      await loadConfig();
+      await loadDataFromJSON();
+    };
+
+    /**
+     * Fetch layout settings from config.json
+     */
+    async function loadConfig() {
+      try {
+        const response = await fetch('config.json');
+        if (!response.ok) throw new Error('config.json ফাইল পাওয়া যায়নি');
+        const config = await response.json();
+
+        if (config.fontSizeInPixels) {
+          document.documentElement.style.setProperty('--table-font-size', config.fontSizeInPixels + 'px');
+        }
+        if (config.rowPaddingInPixels) {
+          document.documentElement.style.setProperty('--cell-padding-v', config.rowPaddingInPixels + 'px');
+        }
+        if (config.pageMarginLeftRightInMM) {
+          document.documentElement.style.setProperty('--page-margin-lr', config.pageMarginLeftRightInMM + 'mm');
+        }
+        
+        const widths = config.columnWidthPercentages;
+        if (widths) {
+          if (widths.organization) document.documentElement.style.setProperty('--col-org-w', widths.organization + '%');
+          if (widths.designation) document.documentElement.style.setProperty('--col-desig-w', widths.designation + '%');
+          if (widths.name) document.documentElement.style.setProperty('--col-name-w', widths.name + '%');
+          if (widths.mobileNumber) document.documentElement.style.setProperty('--col-mobile-w', widths.mobileNumber + '%');
+          if (widths.remarks) document.documentElement.style.setProperty('--col-remarks-w', widths.remarks + '%');
+        }
+      } catch (error) {
+        console.warn('Config load warning:', error.message);
+      }
+    }
+
+    /**
+     * Converts nested Object format to array structure for rendering
+     */
+    function normalizeThanaData(rawData) {
+      if (!rawData || typeof rawData !== 'object') return [];
+
+      if (Array.isArray(rawData.thanas)) return rawData.thanas;
+      if (Array.isArray(rawData)) return rawData;
+
+      const normalizedList = [];
+
+      for (const [thanaName, orgsObj] of Object.entries(rawData)) {
+        const organizations = [];
+
+        if (orgsObj && typeof orgsObj === 'object') {
+          for (const [orgName, membersList] of Object.entries(orgsObj)) {
+            const members = Array.isArray(membersList)
+              ? membersList.map((item) => {
+                  if (Array.isArray(item)) {
+                    return {
+                      designation: item[0] || '',
+                      name: item[1] || '',
+                      mobile: item[2] || ''
+                    };
+                  }
+                  return item;
+                })
+              : [];
+
+            organizations.push({
+              organization_name: orgName,
+              members: members
+            });
+          }
+        }
+
+        normalizedList.push({
+          thana_name: thanaName,
+          organizations: organizations
+        });
+      }
+
+      return normalizedList;
+    }
+
+    /**
+     * Fetch data from data.json and render pages
+     */
+    async function loadDataFromJSON() {
+      try {
+        const response = await fetch('data.json');
+        if (!response.ok) throw new Error('data.json ফাইল পাওয়া যায়নি');
+        const data = await response.json();
+        renderThanaPages(data);
+      } catch (error) {
+        const container = document.getElementById('pages-container');
+        container.innerHTML = `
+          <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg text-center font-semibold my-8">
+            ${error.message}। অনুগ্রহ করে ফাইলটি একই ডিরেক্টরিতে রাখুন।
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Render normalized data to A4 pages
+     */
+    function renderThanaPages(rawData) {
+      const container = document.getElementById('pages-container');
+      container.innerHTML = '';
+
+      const thanasList = normalizeThanaData(rawData);
+
+      if (!thanasList || thanasList.length === 0) {
+        container.innerHTML = '<div class="text-center text-red-600 p-4">কোনো থানার ডাটা পাওয়া যায়নি।</div>';
+        return;
+      }
+
+      thanasList.forEach((thana) => {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'a4-page';
+
+        let pageHTML = `
+          <div>
+            <div class="text-center mb-2 pb-0.5 border-b-2 border-slate-800">
+                <h2 class="text-2xl font-bold text-slate-900 tracking-wide mb-0.5">${thana.thana_name || ''}</h2>
+                
+                <p class="text-base font-semibold text-slate-700">অঙ্গ ও সহযোগী সংগঠনসমূহের দায়িত্বপ্রাপ্ত নেতৃবৃন্দের তালিকা</p>
+            </div>
+
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-slate-100 text-slate-900 font-bold text-center">
+                  <th class="col-org text-center">সংগঠন</th>
+                  <th class="col-desig text-center">পদবী</th>
+                  <th class="col-name text-center">নাম</th>
+                  <th class="col-mobile text-center">মোবাইল নম্বর</th>
+                  <th class="col-remarks text-center"></th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        if (thana.organizations && Array.isArray(thana.organizations)) {
+          thana.organizations.forEach((org) => {
+            const memberCount = org.members ? org.members.length : 0;
+            
+            if (org.members && Array.isArray(org.members) && memberCount > 0) {
+              org.members.forEach((member, index) => {
+                pageHTML += `
+                  <tr>
+                    ${index === 0 ? `<td class="col-org font-semibold text-slate-800 text-center align-middle bg-slate-50/50" rowspan="${memberCount}">${org.organization_name || ''}</td>` : ''}
+                    <td class="col-desig text-slate-700 font-medium">${member.designation || '-'}</td>
+                    <td class="col-name text-slate-900 font-semibold">${member.name || '-'}</td>
+                    <td class="col-mobile text-center font-mono text-slate-800">${member.mobile || '-'}</td>
+                    <td class="col-remarks text-center"></td>
+                  </tr>
+                `;
+              });
+            }
+          });
+        }
+
+        pageHTML += `
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pt-1 text-[10px] text-slate-500 flex justify-end items-center border-t border-slate-200 mt-4">
+            <span>থানা: ${thana.thana_name || ''}</span>
+          </div>
+        `;
+
+        pageDiv.innerHTML = pageHTML;
+        container.appendChild(pageDiv);
+      });
+    }
+  </script>
+</body>
+</html>

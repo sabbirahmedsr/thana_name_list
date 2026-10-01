@@ -1,0 +1,12 @@
+{
+  "fontSizeInPixels": 14,
+  "rowPaddingInPixels": 7,
+  "pageMarginLeftRightInMM": 18,
+  "columnWidthPercentages": {
+    "organization": 14,
+    "designation": 24,
+    "name": 27,
+    "mobileNumber": 17,
+    "remarks": 18
+  }
+}
