@@ -1,12 +1,11 @@
 {
   "fontSizeInPixels": 14,
-  "rowPaddingInPixels": 7,
+  "rowPaddingInPixels": 5,
   "pageMarginLeftRightInMM": 18,
   "columnWidthPercentages": {
-    "organization": 14,
-    "designation": 24,
-    "name": 27,
-    "mobileNumber": 17,
-    "remarks": 18
+    "designation": 28,
+    "name": 32,
+    "mobileNumber": 20,
+    "remarks": 20
   }
 }
