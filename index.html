@@ -11,7 +11,7 @@
     :root {
       --table-font-size: 14px;
       --cell-padding-v: 6px;
-      --cell-padding-h: 5px;
+      --cell-padding-h: 4px;
       --page-margin-lr: 18mm;
       --col-desig-w: 28%;
       --col-name-w: 32%;
@@ -55,7 +55,7 @@
       padding-bottom: var(--cell-padding-v) !important;
       padding-left: var(--cell-padding-h) !important;
       padding-right: var(--cell-padding-h) !important;
-      line-height: 1.25;
+      line-height: 1.1;
     }
 
     /* Column Width Selector Rules */
@@ -264,8 +264,19 @@
                 <tbody>
         `;
 
-        if (thana.organizations && Array.isArray(thana.organizations)) {
+      if (thana.organizations && Array.isArray(thana.organizations)) {
           thana.organizations.forEach((org) => {
+
+            // _gap_ চেক করা এবং খালি সারি (Empty Row) রেন্ডার করা
+            if (org.organization_name === '_gap_') {
+              pageHTML += `
+                <tr>
+                  <td colspan="4" class="h-6 bg-white border-l-0 border-r-0 border-t border-b border-slate-300"></td>
+                </tr>
+              `;
+              return;
+            }
+
             if (org.members && Array.isArray(org.members) && org.members.length > 0) {
               
               // ক্যাটাগরি/সংগঠনের মার্জড রো

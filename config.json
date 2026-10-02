@@ -1,6 +1,6 @@
 {
-  "fontSizeInPixels": 14,
-  "rowPaddingInPixels": 6,
+  "fontSizeInPixels": 12,
+  "rowPaddingInPixels": 4,
   "pageMarginLeftRightInMM": 18,
   "columnWidthPercentages": {
     "designation": 28,
